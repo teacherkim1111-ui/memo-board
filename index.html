@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>📎 서류 메모 보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f3ef;
+  --sidebar-bg: #eae7e0;
+  --card-bg: #ffffff;
+  --card-hover: #faf9f7;
+  --card-active: #fff8ed;
+  --card-active-border: #e8a94f;
+  --accent: #d4893b;
+  --accent-light: #f0dcc3;
+  --text: #2c2825;
+  --text-secondary: #7a7168;
+  --text-light: #a89e93;
+  --border: #ddd7ce;
+  --danger: #c0503e;
+  --danger-light: #f5e0dc;
+  --success: #5a9a6e;
+  --radius: 10px;
+  --transition: 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'IBM Plex Sans KR', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ===== SETUP SCREEN ===== */
+.setup-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100dvh;
+  padding: 24px;
+}
+
+.setup-box {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 4px 16px rgba(44,40,37,0.12);
+}
+
+.setup-box h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.3px; }
+
+.setup-box .subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.setup-box label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.setup-box input[type="text"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  margin-bottom: 8px;
+  transition: border-color var(--transition);
+}
+.setup-box input[type="text"]:focus { border-color: var(--accent); }
+
+.setup-box .hint {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.setup-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.setup-btn:hover { background: #c07830; }
+.setup-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+.setup-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+}
+
+.setup-steps {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.setup-steps h3 { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+
+.setup-steps ol {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.9;
+  padding-left: 18px;
+}
+
+.setup-steps code {
+  background: var(--accent-light);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 11.5px;
+}
+
+/* ===== APP LAYOUT ===== */
+.app { display: none; height: 100dvh; }
+.app.visible { display: flex; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.3px;
+}
+
+.sidebar-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #c07830; }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-secondary { background: var(--card-bg); color: var(--text-secondary); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--card-hover); }
+
+.search-box { margin-top: 12px; position: relative; }
+
+.search-box input {
+  width: 100%;
+  padding: 9px 12px 9px 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--transition);
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text-light); }
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  pointer-events: none;
+}
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.sync-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+.sync-dot.syncing { background: var(--accent); animation: pulse 1s infinite; }
+.sync-dot.error { background: var(--danger); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Card List */
+.card-list { flex: 1; overflow-y: auto; padding: 8px; }
+.card-list::-webkit-scrollbar { width: 4px; }
+.card-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.card-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 2px solid transparent;
+  margin-bottom: 4px;
+}
+
+.card-item:hover { background: var(--card-hover); }
+.card-item.active { background: var(--card-active); border-color: var(--card-active-border); }
+
+.card-thumb {
+  width: 56px; height: 56px; min-width: 56px;
+  border-radius: 8px;
+  background: var(--border);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card-thumb .no-img { font-size: 22px; color: var(--text-light); }
+
+.card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.card-info .title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+.card-info .preview { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.card-info .date { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; color: var(--text-light); text-align: center; padding: 40px;
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty-state p { font-size: 14px; line-height: 1.6; }
+
+/* ===== MAIN PANEL ===== */
+.main-panel { flex: 1; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; background: var(--bg); }
+
+.main-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--text-light); text-align: center; padding: 40px;
+}
+.main-empty .icon { font-size: 64px; margin-bottom: 16px; opacity: 0.4; }
+.main-empty p { font-size: 15px; line-height: 1.8; }
+
+.main-content { flex: 1; overflow-y: auto; padding: 32px; }
+.main-content::-webkit-scrollbar { width: 6px; }
+.main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.main-title-input {
+  font-size: 22px; font-weight: 600;
+  border: none; background: transparent;
+  color: var(--text); font-family: inherit;
+  width: 100%; outline: none;
+  padding: 4px 0; margin-bottom: 8px;
+  border-bottom: 2px solid transparent;
+  transition: border-color var(--transition);
+  letter-spacing: -0.3px;
+}
+.main-title-input:focus { border-bottom-color: var(--accent); }
+.main-title-input::placeholder { color: var(--text-light); }
+
+.main-date { font-size: 13px; color: var(--text-light); margin-bottom: 24px; }
+
+/* Image area */
+.image-area {
+  background: var(--card-bg);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.image-area:hover { border-color: var(--accent); background: var(--card-hover); }
+
+.image-area.has-image {
+  border-style: solid; border-color: var(--border);
+  padding: 0; cursor: default; overflow: hidden;
+}
+
+.upload-prompt { color: var(--text-light); padding: 40px 20px; }
+.upload-prompt .icon { font-size: 36px; margin-bottom: 8px; }
+.upload-prompt p { font-size: 14px; }
+.upload-prompt .sub { font-size: 12px; margin-top: 4px; }
+
+.image-area img {
+  max-width: 100%; max-height: 500px;
+  display: block; margin: 0 auto;
+  border-radius: 8px; cursor: zoom-in;
+}
+
+.image-actions {
+  position: absolute; top: 8px; right: 8px;
+  display: flex; gap: 4px;
+  opacity: 0; transition: opacity var(--transition);
+}
+.image-area:hover .image-actions { opacity: 1; }
+
+.image-actions button {
+  width: 32px; height: 32px;
+  border-radius: 6px; border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  background: rgba(255,255,255,0.9);
+  color: var(--text-secondary);
+  backdrop-filter: blur(4px);
+  transition: all var(--transition);
+}
+.image-actions button:hover { background: white; color: var(--danger); }
+
+.uploading-indicator {
+  display: none;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.uploading-indicator .spinner-small {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Note */
+.note-area { margin-bottom: 24px; }
+.note-area label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.note-area textarea {
+  width: 100%; min-height: 160px; padding: 16px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; font-family: inherit; line-height: 1.7;
+  color: var(--text); background: var(--card-bg);
+  resize: vertical; outline: none;
+  transition: border-color var(--transition);
+}
+.note-area textarea:focus { border-color: var(--accent); }
+.note-area textarea::placeholder { color: var(--text-light); }
+
+.main-footer {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding-top: 16px; border-top: 1px solid var(--border);
+}
+
+.btn-danger { background: var(--danger-light); color: var(--danger); }
+.btn-danger:hover { background: #efd0cb; }
+
+/* ===== ZOOM ===== */
+.zoom-overlay {
+  display: none; position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  align-items: center; justify-content: center;
+  cursor: zoom-out;
+  backdrop-filter: blur(4px);
+}
+.zoom-overlay.show { display: flex; }
+.zoom-overlay img { max-width: 95vw; max-height: 95vh; object-fit: contain; border-radius: 4px; }
+
+/* ===== LOADING ===== */
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(245,243,239,0.8);
+  z-index: 500;
+  display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px;
+  backdrop-filter: blur(2px);
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-overlay p { font-size: 14px; color: var(--text-secondary); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== MOBILE ===== */
+.mobile-header {
+  display: none;
+  padding: 12px 16px;
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border);
+  align-items: center; gap: 12px;
+}
+.mobile-header .back-btn {
+  background: none; border: none; font-size: 20px;
+  cursor: pointer; color: var(--text-secondary); padding: 4px;
+}
+.mobile-header .mobile-title {
+  font-size: 15px; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 100%; min-width: unset; z-index: 100;
+  }
+  .sidebar.hidden { transform: translateX(-100%); }
+  .main-panel { width: 100%; }
+  .mobile-header { display: flex; }
+  .main-content { padding: 20px 16px; }
+  .main-title-input { font-size: 18px; }
+  .image-area img { max-height: 300px; }
+  .image-actions { opacity: 1; }
+  .setup-box { padding: 24px; }
+  .setup-box h1 { font-size: 20px; }
+}
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.card-item { animation: slideIn 0.2s ease; }
+
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text); color: white;
+  padding: 10px 20px; border-radius: 8px;
+  font-size: 13px; font-family: inherit;
+  z-index: 2000;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-box">
+    <h1>📎 서류 메모 보드</h1>
+    <p class="subtitle">Google Sheets + Drive와 연결하면 PC↔폰 어디서든 같은 메모를 볼 수 있어요.<br>이미지는 Drive에 저장되어 시트가 가볍게 유지됩니다.</p>
+
+    <div class="setup-steps">
+      <h3>📌 연결 방법 (최초 1회)</h3>
+      <ol>
+        <li>Google Sheets에서 <strong>새 스프레드시트</strong> 생성</li>
+        <li>시트 이름을 <code>메모</code> 로 변경</li>
+        <li>A1~F1 헤더: <code>id</code> <code>title</code> <code>note</code> <code>image</code> <code>created</code> <code>updated</code></li>
+        <li>메뉴 → <strong>확장프로그램</strong> → <strong>Apps Script</strong></li>
+        <li>제공된 서버 코드를 붙여넣고 💾 저장</li>
+        <li><strong>배포 → 새 배포</strong> → 유형: 웹 앱<br>
+          · 실행 주체: <code>나</code> / 액세스: <code>모든 사용자</code></li>
+        <li>⚠️ 첫 실행 시 <strong>Drive 권한 승인</strong> 필요</li>
+        <li>배포 URL을 아래에 붙여넣기</li>
+      </ol>
+    </div>
+
+    <label>Apps Script 웹 앱 URL</label>
+    <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/xxxxx/exec">
+    <p class="hint">배포 후 나오는 URL 전체를 붙여넣으세요.</p>
+
+    <button class="setup-btn" id="setupBtn" onclick="testAndSave()">연결 테스트 & 시작</button>
+    <p class="setup-error" id="setupError"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1><span>📎</span> 서류 메모 보드</h1>
+      <div class="sidebar-actions">
+        <button class="btn btn-primary" onclick="createNew()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          새 메모
+        </button>
+        <button class="btn btn-secondary" onclick="refreshList()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          새로고침
+        </button>
+      </div>
+      <div class="search-box">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="메모 검색..." id="searchInput" oninput="renderList()">
+      </div>
+      <div class="sync-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncText">연결됨</span>
+        <span style="margin-left:auto;cursor:pointer;text-decoration:underline;font-size:11px;" onclick="resetSetup()">설정변경</span>
+      </div>
+    </div>
+    <div class="card-list" id="cardList"></div>
+  </div>
+
+  <div class="main-panel">
+    <div class="mobile-header">
+      <button class="back-btn" onclick="showSidebar()">←</button>
+      <div class="mobile-title" id="mobileTitle">서류 메모 보드</div>
+    </div>
+    <div class="main-empty" id="mainEmpty">
+      <div class="icon">📋</div>
+      <p>왼쪽에서 메모를 선택하거나<br><strong>새 메모</strong>를 만들어보세요.<br><br>📷 서류 사진을 찍어서 올리고<br>📝 간단한 메모를 남기면 끝!</p>
+    </div>
+    <div class="main-content" id="mainContent" style="display:none;">
+      <input type="text" class="main-title-input" id="titleInput" placeholder="제목 (예: 아동명부 제출 안내)" oninput="autoSave()">
+      <div class="main-date" id="mainDate"></div>
+
+      <div class="image-area" id="imageArea" onclick="triggerUpload()">
+        <div class="upload-prompt" id="uploadPrompt">
+          <div class="icon">📷</div>
+          <p>클릭하거나 사진을 끌어다 놓으세요</p>
+          <p class="sub">출력물, 메모, 서류 등을 촬영해서 올리기</p>
+        </div>
+        <div class="uploading-indicator" id="uploadingIndicator">
+          <span class="spinner-small"></span> Drive에 업로드 중...
+        </div>
+        <div class="image-actions" id="imageActions" style="display:none;">
+          <button onclick="event.stopPropagation(); removeImage()" title="이미지 삭제">✕</button>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handleFile(event)">
+
+      <div class="note-area">
+        <label>📝 메모</label>
+        <textarea id="noteInput" placeholder="이 서류가 뭔지, 뭘 해야 하는지 간단히 적어두세요...&#10;&#10;예) B선생님 나눠준 출력물. 아동명부 양식 내일까지 공유폴더에 제출." oninput="autoSave()"></textarea>
+      </div>
+
+      <div class="main-footer">
+        <button class="btn btn-danger" onclick="deleteMemo()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ZOOM -->
+<div class="zoom-overlay" id="zoomOverlay" onclick="closeZoom()">
+  <img id="zoomImg" src="">
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingText">불러오는 중...</p>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let API_URL = '';
+let memos = [];
+let activeId = null;
+let saveTimeout = null;
+
+// ===== SETUP =====
+function checkSetup() {
+  const saved = localStorage.getItem('memo-board-api-url');
+  if (saved) {
+    API_URL = saved;
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    refreshList();
+  }
+}
+
+async function testAndSave() {
+  const url = document.getElementById('apiUrlInput').value.trim();
+  const err = document.getElementById('setupError');
+  const btn = document.getElementById('setupBtn');
+
+  if (!url || !url.startsWith('https://script.google.com/')) {
+    err.textContent = 'Google Apps Script URL 형식이 아닙니다.';
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '연결 테스트 중...';
+  err.style.display = 'none';
+
+  try {
+    const res = await fetch(url + '?action=list');
+    const data = await res.json();
+    if (data.success) {
+      API_URL = url;
+      localStorage.setItem('memo-board-api-url', url);
+      document.getElementById('setupScreen').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      memos = data.memos || [];
+      parseMemoImages();
+      renderList();
+      showToast('✅ 연결 성공!');
+    } else {
+      throw new Error(data.error || '응답 오류');
+    }
+  } catch(e) {
+    err.textContent = '연결 실패: ' + e.message;
+    err.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '연결 테스트 & 시작';
+}
+
+function resetSetup() {
+  if (!confirm('설정을 초기화할까요?')) return;
+  localStorage.removeItem('memo-board-api-url');
+  location.reload();
+}
+
+// ===== PARSE IMAGE JSON =====
+function parseMemoImages() {
+  memos.forEach(m => {
+    if (m.image && typeof m.image === 'string' && m.image.startsWith('{')) {
+      try { m._img = JSON.parse(m.image); } catch(e) { m._img = null; }
+    } else {
+      m._img = null;
+    }
+  });
+}
+
+function getImageUrl(memo) {
+  if (memo._img && memo._img.imageUrl) return memo._img.imageUrl;
+  return null;
+}
+
+// ===== API =====
+async function apiList() {
+  setSyncStatus('syncing', '동기화 중...');
+  try {
+    const res = await fetch(API_URL + '?action=list');
+    const data = await res.json();
+    if (data.success) {
+      memos = data.memos || [];
+      parseMemoImages();
+      setSyncStatus('ok', '동기화 완료 · ' + timeNow());
+      return true;
+    }
+    throw new Error(data.error);
+  } catch(e) {
+    setSyncStatus('error', '동기화 실패');
+    showToast('⚠️ 불러오기 실패');
+    return false;
+  }
+}
+
+async function apiSave(memo) {
+  setSyncStatus('syncing', '저장 중...');
+  try {
+    const res = await fetch(API_URL + '?action=save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        id: memo.id,
+        title: memo.title,
+        note: memo.note,
+        image: memo.image, // JSON string or ""
+        created: memo.created,
+        updated: memo.updated
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      setSyncStatus('ok', '저장됨 · ' + timeNow());
+      return true;
+    }
+    throw new Error(data.error);
+  } catch(e) {
+    setSyncStatus('error', '저장 실패');
+    showToast('⚠️ 저장 실패');
+    return false;
+  }
+}
+
+async function apiUploadImage(memoId, base64Data) {
+  try {
+    const res = await fetch(API_URL + '?action=upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        id: memoId,
+        imageData: base64Data,
+        mimeType: 'image/jpeg'
+      })
+    });
+    const data = await res.json();
+    if (data.success) return data; // { fileId, imageUrl }
+    throw new Error(data.error);
+  } catch(e) {
+    showToast('⚠️ 이미지 업로드 실패');
+    return null;
+  }
+}
+
+async function apiDelete(id) {
+  setSyncStatus('syncing', '삭제 중...');
+  try {
+    const res = await fetch(API_URL + '?action=delete&id=' + id);
+    const data = await res.json();
+    if (data.success) {
+      setSyncStatus('ok', '삭제됨 · ' + timeNow());
+      return true;
+    }
+    throw new Error(data.error);
+  } catch(e) {
+    setSyncStatus('error', '삭제 실패');
+    return false;
+  }
+}
+
+// ===== CREATE =====
+async function createNew() {
+  const memo = {
+    id: Date.now().toString(),
+    title: '',
+    note: '',
+    image: '',
+    _img: null,
+    created: new Date().toISOString(),
+    updated: new Date().toISOString()
+  };
+  memos.unshift(memo);
+  renderList();
+  selectMemo(memo.id);
+  await apiSave(memo);
+
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.add('hidden');
+  }
+}
+
+// ===== SELECT =====
+function selectMemo(id) {
+  activeId = id;
+  const memo = memos.find(m => m.id === id);
+  if (!memo) return;
+
+  document.getElementById('mainEmpty').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  document.getElementById('titleInput').value = memo.title;
+  document.getElementById('noteInput').value = memo.note;
+  document.getElementById('mainDate').textContent = fmtDate(memo.created) +
+    (memo.updated !== memo.created ? ' (수정: ' + fmtDate(memo.updated) + ')' : '');
+  document.getElementById('mobileTitle').textContent = memo.title || '새 메모';
+
+  const area = document.getElementById('imageArea');
+  const prompt = document.getElementById('uploadPrompt');
+  const actions = document.getElementById('imageActions');
+  const uploading = document.getElementById('uploadingIndicator');
+  uploading.style.display = 'none';
+
+  const imgUrl = getImageUrl(memo);
+
+  if (imgUrl) {
+    area.classList.add('has-image');
+    prompt.style.display = 'none';
+    actions.style.display = 'flex';
+    let img = area.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      area.appendChild(img);
+    }
+    img.src = imgUrl;
+    img.onclick = (e) => { e.stopPropagation(); zoomImage(imgUrl); };
+  } else {
+    area.classList.remove('has-image');
+    prompt.style.display = 'block';
+    actions.style.display = 'none';
+    const ex = area.querySelector('img');
+    if (ex) ex.remove();
+  }
+
+  renderList();
+  if (!memo.title) setTimeout(() => document.getElementById('titleInput').focus(), 100);
+}
+
+// ===== AUTOSAVE =====
+function autoSave() {
+  if (!activeId) return;
+  const memo = memos.find(m => m.id === activeId);
+  if (!memo) return;
+
+  memo.title = document.getElementById('titleInput').value;
+  memo.note = document.getElementById('noteInput').value;
+  memo.updated = new Date().toISOString();
+  document.getElementById('mobileTitle').textContent = memo.title || '새 메모';
+
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    renderList();
+    await apiSave(memo);
+  }, 1500);
+}
+
+// ===== IMAGE UPLOAD =====
+function triggerUpload() {
+  const memo = memos.find(m => m.id === activeId);
+  if (memo && getImageUrl(memo)) return;
+  document.getElementById('fileInput').click();
+}
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file || !activeId) return;
+
+  const prompt = document.getElementById('uploadPrompt');
+  const uploading = document.getElementById('uploadingIndicator');
+  prompt.style.display = 'none';
+  uploading.style.display = 'block';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = async function() {
+      // 리사이즈
+      const canvas = document.createElement('canvas');
+      const maxW = 1000, maxH = 1000;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      // base64 (헤더 제거)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      const base64Only = dataUrl.split(',')[1];
+
+      // Drive에 업로드
+      const result = await apiUploadImage(activeId, base64Only);
+
+      if (result) {
+        const memo = memos.find(m => m.id === activeId);
+        if (memo) {
+          const imgJson = JSON.stringify({ fileId: result.fileId, imageUrl: result.imageUrl });
+          memo.image = imgJson;
+          memo._img = { fileId: result.fileId, imageUrl: result.imageUrl };
+          memo.updated = new Date().toISOString();
+          await apiSave(memo);
+          selectMemo(activeId);
+          renderList();
+          showToast('📷 이미지가 Drive에 저장되었습니다');
+        }
+      } else {
+        uploading.style.display = 'none';
+        prompt.style.display = 'block';
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+async function removeImage() {
+  if (!activeId) return;
+  if (!confirm('이미지를 삭제할까요?')) return;
+
+  const memo = memos.find(m => m.id === activeId);
+  if (!memo) return;
+
+  // Drive에서도 삭제
+  if (memo._img && memo._img.fileId) {
+    await fetch(API_URL + '?action=deleteImage&fileId=' + memo._img.fileId);
+  }
+
+  memo.image = '';
+  memo._img = null;
+  memo.updated = new Date().toISOString();
+  await apiSave(memo);
+  selectMemo(activeId);
+  renderList();
+}
+
+// ===== DELETE =====
+async function deleteMemo() {
+  if (!activeId) return;
+  const memo = memos.find(m => m.id === activeId);
+  if (!confirm(`"${memo?.title || '제목 없음'}" 삭제할까요?`)) return;
+
+  const id = activeId;
+  memos = memos.filter(m => m.id !== id);
+  activeId = null;
+  renderList();
+  document.getElementById('mainEmpty').style.display = 'flex';
+  document.getElementById('mainContent').style.display = 'none';
+
+  await apiDelete(id);
+  showToast('삭제되었습니다');
+  if (window.innerWidth <= 768) showSidebar();
+}
+
+// ===== REFRESH =====
+async function refreshList() {
+  showLoading('불러오는 중...');
+  await apiList();
+  renderList();
+  if (activeId) {
+    const memo = memos.find(m => m.id === activeId);
+    if (memo) selectMemo(activeId);
+    else {
+      activeId = null;
+      document.getElementById('mainEmpty').style.display = 'flex';
+      document.getElementById('mainContent').style.display = 'none';
+    }
+  }
+  hideLoading();
+}
+
+// ===== RENDER =====
+function renderList() {
+  const list = document.getElementById('cardList');
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+
+  let filtered = memos;
+  if (q) {
+    filtered = memos.filter(m =>
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.note && m.note.toLowerCase().includes(q))
+    );
+  }
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="icon">${q ? '🔍' : '📎'}</div>
+      <p>${q ? '검색 결과가 없습니다' : '아직 메모가 없어요.<br><b>새 메모</b> 버튼을 눌러보세요!'}</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(m => {
+    const thumbUrl = getImageUrl(m);
+    return `<div class="card-item ${m.id===activeId?'active':''}" onclick="selectMemo('${m.id}');hideSidebarMobile();">
+      <div class="card-thumb">
+        ${thumbUrl ? `<img src="${thumbUrl}" alt="">` : `<span class="no-img">📄</span>`}
+      </div>
+      <div class="card-info">
+        <div class="title">${esc(m.title||'제목 없음')}</div>
+        <div class="preview">${esc(m.note?m.note.substring(0,50):'메모 없음')}</div>
+        <div class="date">${fmtShort(m.updated||m.created)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== ZOOM =====
+function zoomImage(src) {
+  document.getElementById('zoomImg').src = src;
+  document.getElementById('zoomOverlay').classList.add('show');
+}
+function closeZoom() { document.getElementById('zoomOverlay').classList.remove('show'); }
+
+// ===== MOBILE =====
+function showSidebar() { document.getElementById('sidebar').classList.remove('hidden'); }
+function hideSidebarMobile() { if (window.innerWidth <= 768) document.getElementById('sidebar').classList.add('hidden'); }
+
+// ===== UI HELPERS =====
+function setSyncStatus(s, t) {
+  document.getElementById('syncDot').className = 'sync-dot' + (s==='syncing'?' syncing':s==='error'?' error':'');
+  document.getElementById('syncText').textContent = t;
+}
+function showLoading(t) { document.getElementById('loadingText').textContent=t; document.getElementById('loadingOverlay').classList.add('show'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// Drag & drop
+const ia = document.getElementById('imageArea');
+ia.addEventListener('dragover', e => { e.preventDefault(); ia.style.borderColor='var(--accent)'; });
+ia.addEventListener('dragleave', () => { ia.style.borderColor=''; });
+ia.addEventListener('drop', e => {
+  e.preventDefault(); ia.style.borderColor='';
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) handleFile({target:{files:[f],value:''}});
+});
+
+// ===== UTILS =====
+function fmtDate(iso) {
+  if(!iso) return '';
+  const d=new Date(iso), wd=['일','월','화','수','목','금','토'];
+  return `${d.getMonth()+1}/${d.getDate()}(${wd[d.getDay()]}) ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtShort(iso) {
+  if(!iso) return '';
+  const d=new Date(iso), diff=Date.now()-d;
+  if(diff<60000) return '방금';
+  if(diff<3600000) return Math.floor(diff/60000)+'분 전';
+  if(diff<86400000) return Math.floor(diff/3600000)+'시간 전';
+  if(diff<604800000) return Math.floor(diff/86400000)+'일 전';
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function timeNow() { const d=new Date(); return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
+function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeZoom(); });
+
+// ===== INIT =====
+checkSetup();
+</script>
+</body>
+</html>
